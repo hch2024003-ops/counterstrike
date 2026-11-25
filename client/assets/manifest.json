@@ -1,0 +1,51 @@
+{
+ "schema": 1,
+ "version": "1.0.0",
+ "packages": {
+  "core": {
+   "name": "Core Pack (đi kèm bộ cài)",
+   "version": "1.0.0",
+   "bundled": true,
+   "deps": [],
+   "size": 0
+  },
+  "characters": {
+   "name": "Character Pack",
+   "version": "1.0.0",
+   "bundled": false,
+   "deps": [
+    "core"
+   ],
+   "size": 0
+  },
+  "weapons": {
+   "name": "Weapon Pack",
+   "version": "1.0.0",
+   "bundled": false,
+   "deps": [
+    "core"
+   ],
+   "size": 0
+  },
+  "environment": {
+   "name": "Environment Pack",
+   "version": "1.0.0",
+   "bundled": false,
+   "deps": [
+    "core"
+   ],
+   "size": 0
+  },
+  "ultra-textures": {
+   "name": "Ultra Texture Pack",
+   "version": "1.0.0",
+   "bundled": false,
+   "deps": [
+    "environment"
+   ],
+   "size": 0
+  }
+ },
+ "assets": [],
+ "bindings": {}
+}

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HACHIHI Counter-Strike</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game"></div>
+
+  <!-- HUD trong trận -->
+  <div id="hud" class="hidden">
+    <div id="topbar">
+      <div class="side red"><span id="aliveA">5</span><b id="scoreA">0</b></div>
+      <div id="timerbox"><span id="roundlabel">Vòng 1</span><b id="timer">0:00</b></div>
+      <div class="side blue"><b id="scoreB">0</b><span id="aliveB">5</span></div>
+    </div>
+    <div id="killfeed"></div>
+    <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+    <div id="hitmarker"></div>
+    <div id="pops"></div>
+    <div id="dmgdir"><i></i></div>
+    <div id="vignette"></div>
+    <pre id="stats" class="hidden"></pre>
+    <div id="banner"></div>
+    <div id="spectate"></div>
+    <div id="pingbox"></div>
+    <div id="bottomleft"><span class="lbl">HP</span><b id="hp">100</b></div>
+    <div id="bottomright">
+      <span id="wname">Súng trường</span>
+      <b id="ammo">30 / 90</b>
+      <div id="weaponbar"></div>
+    </div>
+    <div id="hint">Tab: bảng điểm · R: thay đạn · 1 / 2: đổi súng · B: mua đồ · giữ G/H: canh rồi thả để ném lựu đạn/bom khói · chuột phải: ống ngắm · F3: FPS/ping · Esc: nhả chuột</div>
+  </div>
+
+  <div id="scoreboard" class="hidden"></div>
+
+  <div id="clickplay" class="hidden"><div>Nhấp chuột để vào trận</div><button id="btnKeysGame" type="button">Phím điều khiển</button><button id="btnLeaveGame" class="ghost">Rời phòng</button></div>
+
+  <!-- Menu chính -->
+  <div id="gfxModal" class="modal hidden">
+    <div class="panel wide">
+      <h2>Cài đặt</h2>
+      <div class="tabs"><button type="button" id="tabBtnGfx" class="tab active">Đồ họa</button><button type="button" id="tabBtnKeys" class="tab">Phím điều khiển</button></div>
+      <div id="tabGfx">
+      <div class="grid2">
+        <label>Chế độ hiển thị
+          <select id="gDisplayMode">
+            <option value="windowed">Cửa sổ</option>
+            <option value="borderless">Toàn màn hình không viền (Borderless)</option>
+            <option value="fullscreen">Toàn màn hình (Fullscreen)</option>
+          </select>
+        </label>
+        <label>Độ phân giải hiển thị
+          <select id="gResolution"></select>
+        </label>
+        <label>Giới hạn FPS
+          <select id="gFps">
+            <option value="0">Không giới hạn</option>
+            <option value="60">60</option><option value="120">120</option><option value="144">144</option>
+            <option value="165">165</option><option value="240">240</option>
+          </select>
+        </label>
+        <label class="chk"><input type="checkbox" id="gVsync"> V-Sync <small id="gVsyncNote"></small></label>
+        <label>Mức đồ họa
+          <select id="gPreset">
+            <option value="auto">Auto (tự điều chỉnh)</option>
+            <option value="low">Low</option><option value="medium">Medium</option>
+            <option value="high">High</option><option value="ultra">Ultra</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <label>Render Scale: <b id="gScaleVal">100%</b> <small id="gScaleNote"></small>
+          <input type="range" id="gScale" min="50" max="125" step="5" value="100">
+        </label>
+        <label>Chất lượng bóng đổ
+          <select id="gShadow"><option value="0">Tắt</option><option value="1">Thấp</option><option value="2">Vừa</option><option value="3">Cao</option><option value="4">Rất cao</option></select>
+        </label>
+        <label>Chất lượng texture (lọc dị hướng)
+          <select id="gTexture"><option value="0">Thấp (1x)</option><option value="1">Vừa (4x)</option><option value="2">Cao (8x)</option><option value="3">Rất cao (16x)</option></select>
+        </label>
+        <label>Ambient Occlusion
+          <select id="gAo"><option value="0">Tắt</option><option value="1">Vừa</option><option value="2">Cao</option></select>
+        </label>
+        <label>Hậu kỳ
+          <select id="gPost"><option value="0">Tắt</option><option value="1">Bloom nhẹ + MSAA 2x</option><option value="2">Bloom + MSAA 4x</option></select>
+        </label>
+        <label>Chất lượng hiệu ứng
+          <select id="gFx"><option value="0">Thấp</option><option value="1">Vừa</option><option value="2">Cao</option><option value="3">Rất cao</option></select>
+        </label>
+        <label class="chk"><input type="checkbox" id="gShowFps"> Hiển thị FPS / frame time</label>
+      </div>
+      <div id="gInfo" class="sub"></div>
+      <div id="gWarn" class="warn"></div>
+      <div class="row">
+        <button id="gApply" class="primary">Áp dụng</button>
+        <button id="gRevert" type="button">Hoàn tác</button>
+        <button id="gClose" type="button" class="ghost">Đóng</button>
+      </div>
+      </div>
+      <div id="tabKeys" class="hidden">
+        <div id="keysBody"></div>
+        <div class="row"><button id="kClose" type="button" class="ghost">Đóng</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dispConfirm" class="modal hidden">
+    <div class="panel">
+      <h2>Giữ cài đặt hiển thị này?</h2>
+      <p class="sub">Tự khôi phục cài đặt cũ sau <b id="dispCount">15</b> giây nếu bạn không xác nhận.</p>
+      <div class="row">
+        <button id="dispKeep" class="primary">Giữ</button>
+        <button id="dispUndo" type="button">Khôi phục</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="menu" class="screen">
+    <div class="panel">
+      <h1>HACHIHI<span>COUNTER-STRIKE</span></h1>
+      <p class="sub">FPS 3D 5 đấu 5 · máy chủ trên Render.com</p>
+
+      <label>Nickname
+        <input id="nick" maxlength="14" placeholder="Nhập tên của bạn" autocomplete="off">
+      </label>
+      <label>Kiểu máy chủ
+        <select id="serverMode">
+          <option value="render">Online (server trên Render)</option>
+          <option value="lan">Mạng nội bộ (LAN, 1 máy làm server)</option>
+        </select>
+      </label>
+      <label><span id="serverLabel">Địa chỉ server</span>
+        <input id="serverUrl" placeholder="wss://ten-server.onrender.com" autocomplete="off" spellcheck="false">
+      </label>
+      <div id="serverHint" class="sub" style="margin:-6px 0 12px"></div>
+      <label>Độ nhạy chuột: <b id="sensVal">1.0</b>
+        <input id="sens" type="range" min="0.3" max="3" step="0.1" value="1">
+      </label>
+      <label>Đồ họa
+        <div class="row" style="margin:0">
+          <button id="btnGfx" type="button">Cài đặt đồ họa…</button>
+          <button id="btnKeys" type="button">Phím điều khiển…</button>
+          <button id="btnGuide" type="button">Hướng dẫn chơi</button>
+          <button id="btnAssets" type="button">Thư viện đồ họa</button>
+          <span id="gfxSummary" class="sub" style="margin:0;align-self:center"></span>
+        </div>
+      </label>
+
+      <div class="row">
+        <button id="btnCreate" class="primary">Tạo phòng</button>
+      </div>
+      <div class="row">
+        <input id="pin" maxlength="4" inputmode="numeric" placeholder="Mã PIN 4 số" autocomplete="off">
+        <button id="btnJoin">Vào phòng</button>
+      </div>
+
+      <div id="menuStatus" class="status"></div>
+      <button id="btnCancel" class="ghost hidden">Huỷ kết nối</button>
+
+      <p class="controls">
+        <b>Điều khiển:</b> WASD di chuyển · Chuột ngắm và bắn · Space nhảy · Shift đi chậm · R thay đạn · 1/2/3 đổi súng · Tab bảng điểm
+      </p>
+    </div>
+  </div>
+
+  <!-- Phòng chờ -->
+  <div id="lobby" class="screen hidden">
+    <div class="panel wide">
+      <div class="lobbyhead">
+        <div>
+          <div class="sub">Mã PIN phòng</div>
+          <div id="lobbyPin" class="pin">----</div>
+        </div>
+        <div id="lobbyPing" class="sub"></div>
+      </div>
+
+      <div class="teams">
+        <div class="team red">
+          <h2>ĐỘI ĐỎ <small id="countA">0/5</small></h2>
+          <ul id="listA"></ul>
+          <button id="joinA">Vào đội Đỏ</button>
+          <div class="botrow hidden" data-team="A">
+            <select class="botLevel" title="Cấp độ máy">
+              <option value="1">1 · Dở</option><option value="2" selected>2 · Thường</option><option value="3">3 · Khá</option>
+              <option value="4">4 · Giỏi</option><option value="5">5 · Xuất sắc</option>
+            </select>
+            <button type="button" class="addBotBtn" data-team="A">＋ Thêm máy</button>
+          </div>
+        </div>
+        <div class="team blue">
+          <h2>ĐỘI XANH <small id="countB">0/5</small></h2>
+          <ul id="listB"></ul>
+          <button id="joinB">Vào đội Xanh</button>
+          <div class="botrow hidden" data-team="B">
+            <select class="botLevel" title="Cấp độ máy">
+              <option value="1">1 · Dở</option><option value="2" selected>2 · Thường</option><option value="3">3 · Khá</option>
+              <option value="4">4 · Giỏi</option><option value="5">5 · Xuất sắc</option>
+            </select>
+            <button type="button" class="addBotBtn" data-team="B">＋ Thêm máy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="lobbyopts">
+        <label><input type="checkbox" id="optEconomy" checked> Chế độ tiền &amp; mua súng</label>
+        <label>Số vòng thắng
+          <select id="optRounds"><option>3</option><option>5</option><option>8</option><option>10</option><option>12</option><option>16</option></select>
+        </label>
+        <label>Bản đồ <select id="optMap"></select></label>
+        <span id="optNote" class="sub"></span>
+      </div>
+      <p id="mapDesc" class="sub" style="text-align:center;margin:0 0 6px"></p>
+      <div id="lobbyMsg" class="status"></div>
+      <div class="row">
+        <button id="btnStart" class="primary">Bắt đầu trận</button>
+        <button id="btnGuide2" type="button">Hướng dẫn chơi</button>
+        <button id="btnLeave" class="ghost">Rời phòng</button>
+      </div>
+      <p class="controls">Gửi mã PIN cho bạn bè để họ vào cùng phòng. Có thể bắt đầu với 1 người để chơi thử (vòng kết thúc khi hết giờ).</p>
+    </div>
+  </div>
+
+  <div id="assetsPanel" class="hidden"><div class="guidebox">
+    <h2>Thư viện đồ họa</h2>
+    <p class="sub">Model 3D (GLB) và texture chạy hoàn toàn offline từ máy bạn. Mỗi file được kiểm tra SHA-256; cập nhật từ xa chỉ nhận manifest có chữ ký.</p>
+    <div id="assetsBody"></div>
+    <p id="assetsMsg" class="sub"></p>
+    <button id="assetsInstall">Cài từ thư mục…</button>
+    <button id="assetsCheck">Kiểm tra cập nhật</button>
+    <button id="assetsClose" class="primary">Đóng</button>
+  </div></div>
+
+  <div id="guide" class="hidden"><div class="guidebox"><div id="guideBody"></div><button id="guideClose" class="primary">Đóng</button></div></div>
+
+  <script src="dist/bundle.js"></script>
+</body>
+</html>

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.4 — Environment FX (thời tiết & không khí)
+Gameplay, hitbox, vật lý, giao thức mạng và server giữ nguyên.
+
+- Mới: mưa (nhỏ/vừa/lớn, nghiêng theo gió), sấm chớp (chỉ đổi ánh sáng môi trường, không đèn động, có tiếng sấm trễ), gió, sương xa + sương sát đất, lá bay, bụi lơ lửng, tuyết, mặt đất ướt khi mưa, giọt mưa trên ống kính. Toàn bộ chuyển động hạt chạy trên GPU (shader), mật độ chỉnh bằng drawRange; không tạo/huỷ Mesh trong vòng lặp.
+- Thời tiết theo bản đồ, đồng bộ nhiều người chơi bằng seed (PIN phòng + bản đồ + số vòng), không đổi giao thức, không gửi dữ liệu hạt.
+- Tự giảm hiệu ứng theo FPS có hysteresis (4 bậc), tách khỏi Auto đồ họa nhưng nhường nhau (không đánh giá ngay sau khi Auto đổi mức).
+- Cài đặt → Đồ họa → "Hiệu ứng môi trường": Low/Balanced/High/Ultra, bật/tắt từng hiệu ứng, mật độ, hiệu ứng camera, tự giảm theo FPS, Đặt lại mặc định; lưu localStorage (`hachihi.envfx`).
+- Test mới `client/test/env.mjs` (cài đặt, seed đồng bộ, lịch sét, hysteresis, kết hợp mức). Xem `docs/18-environment-fx.md`.
+- Files sửa: `client/src/gfx/sky.js` (uniform uFlash/uOvercast), `client/src/game/world.js` (tạo/cập nhật/dọn Weather, bỏ mưa phùn cũ khi bật Environment FX), `client/src/audio/audio.js` (`thunder`, `setRain`), `client/src/main.js` (nối cài đặt, adaptive, đồng bộ seed theo vòng, dọn khi thoát trận), `client/index.html`, `client/style.css`, `client/package.json`, `server/package.json` (chỉ số phiên bản), `docs/07-hieu-ung-moi-truong.md`.
+- Files mới: `client/src/gfx/envlogic.js`, `client/src/gfx/weather.js`, `client/src/ui/envui.js`, `client/test/env.mjs`, `docs/18-environment-fx.md`.
+
 ## 0.4 — Hiệu năng & cài đặt đồ họa
 Gameplay, mạng và server giữ nguyên (không đổi tốc độ, va chạm, recoil, spread, sát thương, hit detection, nội suy).
 

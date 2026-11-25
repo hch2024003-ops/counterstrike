@@ -1,6 +1,6 @@
 {
   "name": "hachihi-counter-strike",
-  "version": "0.10.3-preview",
+  "version": "0.10.4-preview",
   "description": "HACHIHI Counter-Strike - game FPS 3D (Three.js + Electron)",
   "author": "HACHIHI",
   "main": "electron/main.js",
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node build.js",
     "start": "node build.js && electron .",
-    "test": "node test/core.mjs && node test/keys.mjs && node test/maps.mjs && node test/nade.mjs && node test/assets.mjs",
+    "test": "node test/core.mjs && node test/keys.mjs && node test/maps.mjs && node test/nade.mjs && node test/assets.mjs && node test/env.mjs",
     "web": "node build.js && node serve.js",
     "dist": "node build.js --min && electron-builder --win nsis"
   },

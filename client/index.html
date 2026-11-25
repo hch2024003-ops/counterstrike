@@ -94,6 +94,27 @@
       </div>
       <div id="gInfo" class="sub"></div>
       <div id="gWarn" class="warn"></div>
+      <h3 class="envTitle">Hiệu ứng môi trường (HACHIHI ENVIRONMENT FX)</h3>
+      <div id="envFx" class="grid2">
+        <label class="chk"><input type="checkbox" id="eEnabled"> Bật hiệu ứng môi trường</label>
+        <label>Chất lượng hiệu ứng
+          <select id="eQuality"><option value="low">Low – ưu tiên FPS</option><option value="balanced">Balanced – cân bằng</option><option value="high">High – đẹp hơn</option><option value="ultra">Ultra – máy mạnh</option></select>
+        </label>
+        <label class="chk"><input type="checkbox" id="eRain"> Mưa rơi</label>
+        <label class="chk"><input type="checkbox" id="eThunder"> Sấm chớp</label>
+        <label class="chk"><input type="checkbox" id="eWind"> Gió</label>
+        <label class="chk"><input type="checkbox" id="eFog"> Sương mù</label>
+        <label class="chk"><input type="checkbox" id="eLeaves"> Lá bay</label>
+        <label class="chk"><input type="checkbox" id="eDust"> Bụi trong không khí</label>
+        <label class="chk"><input type="checkbox" id="eSnow"> Tuyết</label>
+        <label class="chk"><input type="checkbox" id="eCamera"> Hiệu ứng camera (giọt mưa, chớp sáng)</label>
+        <label>Mật độ hạt: <b id="eDensityVal">100%</b>
+          <input type="range" id="eDensity" min="20" max="100" step="5" value="100">
+        </label>
+        <label class="chk"><input type="checkbox" id="eAdaptive"> Tự giảm hiệu ứng khi FPS thấp</label>
+      </div>
+      <div id="eStatus" class="sub"></div>
+      <div class="row"><button id="eReset" type="button">Đặt lại mặc định</button></div>
       <div class="row">
         <button id="gApply" class="primary">Áp dụng</button>
         <button id="gRevert" type="button">Hoàn tác</button>

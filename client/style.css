@@ -388,3 +388,8 @@ small { color: var(--muted); font-size: 11.5px; }
 kbd { background: #2b3340; border-radius: 4px; padding: 1px 6px; font-family: inherit; }
 .keymsg { align-self: center; color: #f1d36b; font-size: 13px; }
 #clickplay #btnKeysGame { font-size: 16px; padding: 10px 22px; }
+
+/* Environment FX */
+.envTitle { margin: 18px 0 8px; font-size: 15px; letter-spacing: .04em; }
+#envFx { margin-bottom: 6px; }
+#envFx.off label:not(:first-child) { opacity: .5; }

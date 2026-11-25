@@ -21,6 +21,8 @@ import { Punch, RECOIL } from './weapons/recoil.js';
 import { FrameStats } from './ui/stats.js';
 import { ui } from './ui/ui.js';
 import { AutoQuality } from './gfx/autoq.js';
+import { EnvQuality, loadEnvSettings, saveEnvSettings, weatherSeed } from './gfx/envlogic.js';
+import { EnvFxPanel } from './ui/envui.js';
 import * as GS from './gfx/settings.js';
 import { Bench, formatReport, summarize } from './ui/stats.js';
 import { SettingsPanel } from './ui/settingsui.js';
@@ -192,6 +194,38 @@ const auto = new AutoQuality({ startRung: GS.START_RUNG_BY_TIER[gpuTierNow] });
 const bench = new Bench();
 const refreshDeltas = [];
 
+// Environment FX: cài đặt riêng (localStorage 'hachihi.envfx'), tự giảm theo FPS có hysteresis (envlogic.EnvQuality).
+let envSet = loadEnvSettings();
+const envq = new EnvQuality();
+world.weather.onThunder = (vol) => audio.thunder(vol);
+world.weather.onRainLevel = (l) => audio.setRain(l);
+world.weather.setSettings(envSet);
+const envPanel = new EnvFxPanel({
+  get: () => envSet,
+  onChange: (next) => {
+    envSet = next;
+    saveEnvSettings(envSet);
+    world.weather.setSettings(envSet);
+    if (!envSet.adaptive) { envq.level = 0; world.weather.setAdaptiveLevel(0); }
+    world.applyAmbient();
+  },
+  status: () => ({ type: world.weather.cur.type, rain: world.weather.cur.rain, level: envq.level, mapId: world.mapId }),
+});
+void envPanel;
+
+// Thời tiết đồng bộ không cần giao thức mới: mọi người trong phòng cùng (pin phòng, bản đồ, số vòng) => cùng seed => cùng thời tiết.
+function syncWeather(round) {
+  if (!round) return;
+  const key = `${S.room ? S.room.pin : ''}|${world.mapId}|${round}`;
+  if (key === S.wxKey) return;
+  S.wxKey = key;
+  world.weather.setSeed(weatherSeed(S.room ? S.room.pin : '', world.mapId, round));
+}
+function clearWeather() {
+  S.wxKey = '';
+  world.weather.setClear(true);
+}
+
 function loadGfx() {
   try {
     const raw = localStorage.getItem('hachihi.gfx');
@@ -218,6 +252,8 @@ function applyGfx() {
   ui.setStatsVisible(gset.showFps || ui.statsVisible());
   frameStats.reset();
   auto.reset(performance.now());
+  envq.reset(performance.now());
+  envq.setTarget(GS.targetFps(gset, S.refreshHz));
   updateGfxSummary();
 }
 
@@ -476,6 +512,7 @@ function enterGame() {
   S.enterAt = performance.now();
   world.warmup(vm.scene, vm.camera); // biên dịch shader trước để không khựng lần vẽ đầu
   auto.reset(performance.now());
+  envq.reset(performance.now());
   ui.setAmmo(S.self);
   ui.setHp(S.self.hp);
 }
@@ -491,6 +528,7 @@ function leaveGame() {
   controller.clearKeys();
   world.clearRemotes();
   world.clearEffects();
+  clearWeather();
   ui.hideBanner();
   ui.setSpectate('');
   ui.showScreen('lobby');
@@ -518,6 +556,7 @@ function backToMenu(msg, kind) {
   controller.clearKeys();
   world.clearRemotes();
   world.clearEffects();
+  clearWeather();
   ui.hideBanner();
   ui.setSpectate('');
   S.screen = 'menu';
@@ -623,6 +662,7 @@ net.on('round', (m) => {
   };
   if (m.phase === 'lobby') return;
   enterGame();
+  syncWeather(m.round);
   ui.setScore(m.scoreA, m.scoreB);
   ui.setRoundLabel(`VÒNG ${m.round} · THẮNG ${m.toWin}`);
   const cls = (t) => (t === 'A' ? 'red' : t === 'B' ? 'blue' : '');
@@ -1167,6 +1207,7 @@ function frame(now) {
         S.refreshHz = GS.estimateRefresh(refreshDeltas) || 60;
         S.display.refreshRate = S.refreshHz;
         auto.setTarget(GS.targetFps(gset, S.refreshHz));
+        envq.setTarget(GS.targetFps(gset, S.refreshHz));
       }
     }
     // Menu / phòng chờ: cảnh 3D xoay chậm làm nền (vẽ ~30 FPS cho nhẹ máy).
@@ -1190,8 +1231,14 @@ function frame(now) {
     auto.frame(el, now);
     if (auto.update(now)) {
       world.applyGfx(gfxEff()); // Auto đổi bậc: chỉ phần thật sự đổi mới tốn công
+      envq.reset(now); // không đánh giá hiệu ứng môi trường ngay sau khi Auto vừa đổi mức
       frameStats.reset();
     }
+  }
+  if (envSet.enabled && envSet.adaptive) {
+    envq.frame(el, now);
+    const ch = envq.update(now);
+    if (ch) world.weather.setAdaptiveLevel(envq.level);
   }
   if (bench.active && bench.push(el, now)) finishBench(now);
   gameFrame(dt, now);

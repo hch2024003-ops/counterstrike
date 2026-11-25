@@ -11,6 +11,7 @@ import { Post } from '../gfx/post.js';
 import { Fx } from '../gfx/fx.js';
 import { GrenadeFx } from '../gfx/grenadefx.js';
 import { AmbientFx } from '../gfx/ambientfx.js';
+import { Weather } from '../gfx/weather.js';
 import { Decals, GRIME, WET, disableGrime } from '../gfx/surfacefx.js';
 import { visuals } from '../gfx/visuals.js';
 import { Character, makeCorpse, updateCorpse } from '../gfx/characters.js';
@@ -99,6 +100,8 @@ export class World {
     this.gren = new GrenadeFx(this.scene, this.fx);
     this.decals = new Decals(this.scene);
     this.post = new Post(this.renderer, this.scene, this.camera);
+    this.weather = new Weather(this); // Environment FX: mưa, sấm chớp, gió, sương, bụi, lá, tuyết (toàn bộ bằng shader)
+    this.weather.setMap(this.mapId);
     // Shader lỗi trên máy này: báo lên màn hình và tự tắt hiệu ứng gây lỗi (không làm hỏng toàn cảnh)
     this.renderer.debug.onShaderError = (gl, program, vs, fs) => {
       const src = gl.getShaderSource(fs) || '';
@@ -127,8 +130,19 @@ export class World {
 
   // Hiệu ứng không khí của bản đồ (cát bay, hoa rơi, sương, mưa). kinds: mảng tên hoặc undefined.
   setAmbient(kinds) {
+    this._ambKinds = kinds || [];
+    this.applyAmbient();
+  }
+
+  // Khi hệ thống Environment FX bật thì nó tự lo mưa (có điều khiển bật/tắt, cường độ, gió); bỏ lớp mưa phùn cũ để không chồng hai lớp mưa.
+  applyAmbient() {
+    let kinds = this._ambKinds || [];
+    if (this.weather && this.weather.settings.enabled) kinds = kinds.filter((k) => k !== 'rain');
+    const sig = kinds.join(',');
+    if (sig === this._ambSig && this.ambient !== undefined) return;
+    this._ambSig = sig;
     if (this.ambient) this.ambient.dispose();
-    this.ambient = kinds && kinds.length ? new AmbientFx(this.scene, kinds) : null;
+    this.ambient = kinds.length ? new AmbientFx(this.scene, kinds) : null;
     if (this.ambient && this.gfx) this.ambient.setVisible(this.gfx.fx >= 1);
   }
 
@@ -153,6 +167,7 @@ export class World {
     const data = getMapData(id);
     if (this.mapId === data.id) return data;
     this.mapId = data.id;
+    if (this.weather) this.weather.restore(); // trả ánh sáng/sương về gốc trước khi bỏ môi trường cũ
     const old = this.env;
     this.scene.remove(old.root, old.sun, old.sun.target, old.hemi, old.bounce, old.dust);
     old.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); // vật liệu/texture dùng chung nên giữ lại
@@ -172,6 +187,7 @@ export class World {
     this.beamMeshes = [];
     this.env.root.traverse((o) => { if (o.userData.beam) this.beamMeshes.push(o); });
     this.clearEffects();
+    if (this.weather) this.weather.setMap(data.id);
     this.setAmbient(data.theme && data.theme.ambient);
     const g = this.gfx;
     this.gfx = null;
@@ -377,6 +393,7 @@ export class World {
     this.gren.update(dt);
     this.decals.update(dt);
     if (this.ambient) this.ambient.update(dt, this.camera.position);
+    if (this.weather) this.weather.update(dt);
     this.env.update(dt, this.camera.position);
     this.sky.material.uniforms.uTime.value = this.time;
     this.sky.position.copy(this.camera.position);

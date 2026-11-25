@@ -150,7 +150,22 @@ export class AudioEngine {
     wind.start();
     lfo.start();
     hum.start();
-    this.amb = { wg, hg };
+    // Nền tiếng mưa: nhiễu lọc dải, âm lượng theo cường độ mưa (setRain)
+    const rain = c.createBufferSource();
+    rain.buffer = this.noise;
+    rain.loop = true;
+    const rf = c.createBiquadFilter();
+    rf.type = 'bandpass';
+    rf.frequency.value = 2400;
+    rf.Q.value = 0.5;
+    const rg = c.createGain();
+    rg.gain.value = 0;
+    rain.connect(rf);
+    rf.connect(rg);
+    rg.connect(this.master);
+    rain.start();
+    this.rainLevel = 0;
+    this.amb = { wg, hg, rg };
     this.updateAmbient();
   }
 
@@ -160,6 +175,32 @@ export class AudioEngine {
     const inside = this.room !== null;
     this.amb.wg.gain.setTargetAtTime(inside ? 0.008 : 0.03, t, 0.3);
     this.amb.hg.gain.setTargetAtTime(inside ? 0.012 : 0, t, 0.3);
+    this.applyRain();
+  }
+
+  // Cường độ mưa 0..1 (do hệ thống Environment FX báo). Trong nhà nhỏ hơn.
+  setRain(level) {
+    const l = Math.round(clamp(level, 0, 1) * 50) / 50;
+    if (l === this.rainLevel) return;
+    this.rainLevel = l;
+    this.applyRain();
+  }
+
+  applyRain() {
+    if (!this.amb || !this.amb.rg) return;
+    const inside = this.room !== null;
+    this.amb.rg.gain.setTargetAtTime((this.rainLevel || 0) * (inside ? 0.025 : 0.07), this.ctx.currentTime, 0.6);
+  }
+
+  // Tiếng sấm: trầm, kéo dài, vang; vol 0..1 theo độ xa của tia chớp. Chỉ là âm thanh nền, không mang thông tin định vị.
+  thunder(vol = 1) {
+    if (!this.ctx) return;
+    const v = clamp(vol, 0.15, 1) * 0.9;
+    const fx = { lp: 900, send: 0.9 };
+    this.burst({ dur: 0.5, freq: 700, gain: 0.5, vol: v, fx });
+    this.burst({ dur: 3.2, freq: 140, gain: 1.1, vol: v, delay: 0.05, fx });
+    this.tone({ f0: 70, f1: 28, dur: 2.4, gain: 0.9, vol: v, delay: 0.1, fx });
+    this.burst({ dur: 1.6, freq: 260, gain: 0.5, vol: v, delay: 0.7, fx });
   }
 
   // Đường ra của một âm: âm lượng, pan, lọc thấp (xa/bị che), và mức gửi vào vang.

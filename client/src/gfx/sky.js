@@ -23,6 +23,8 @@ uniform vec3 uTop;
 uniform vec3 uMid;
 uniform vec3 uHorizon;
 uniform vec3 uSunCol;
+uniform float uFlash;
+uniform float uOvercast;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
@@ -56,6 +58,10 @@ void main() {
     col = mix(col, cloudCol, cover * smoothstep(0.02, 0.3, d.y) * 0.8);
   }
   col = mix(col, uHorizon * 0.92, (1.0 - smoothstep(-0.2, 0.0, d.y)));
+  // Thời tiết: trời âm u (xám dần) và chớp sáng khi sấm sét; cả hai bằng 0 thì không đổi gì.
+  float lum = dot(col, vec3(0.3, 0.59, 0.11));
+  col = mix(col, vec3(lum) * vec3(0.82, 0.86, 0.92), uOvercast * 0.55);
+  col += vec3(0.7, 0.78, 1.0) * uFlash * (0.35 + 0.65 * smoothstep(-0.1, 0.5, d.y));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -84,6 +90,8 @@ export function makeSky(theme) {
       uMid: { value: new THREE.Color(0.5, 0.6, 0.7) },
       uHorizon: { value: new THREE.Color(0.7, 0.74, 0.77) },
       uSunCol: { value: new THREE.Color(1.0, 0.93, 0.8) },
+      uFlash: { value: 0 },
+      uOvercast: { value: 0 },
     },
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(400, 48, 24), mat);
